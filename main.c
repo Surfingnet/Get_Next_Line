@@ -1,38 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_Next_Line.c                                    :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mghazari <mghazari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/01/27 09:40:20 by mghazari          #+#    #+#             */
-/*   Updated: 2017/02/08 23:07:36 by mghazari         ###   ########.fr       */
+/*   Created: 2017/01/28 12:29:56 by mghazari          #+#    #+#             */
+/*   Updated: 2017/01/29 18:36:58 by mghazari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static int check_fd(t_list **file)
-
-static int cpy_line(char *buf, char* dest)
+int	main(int argc, char *argv[])
 {
-	while
-}
+	int	fd;
+	int	strsize;
+	char*	str;
 
-int		get_next_line(const int fd, char **line)
-{
-	int	ret;
-	int	i;
-	int	stop;
-	char	buf[BUFF_SIZE + 1];
+	if (argc != 2)
+		return (0);
 
-	stop = 0;
-	i = 0;
-	if ((fd < 0 || line == NULL || read(fd, buf, 0) < 0))
-		return (-1);
-	while ((ret = read(fd, buf, BUFF_SIZE)) && !stop)
-	{
+	strsize = 200;
 
-	}
-	return (1);
+	while (!(str = (char*)malloc(sizeof(char) * strsize + 1)))
+		continue;
+	ft_putendl("malloc ok");
+	fd = (open(argv[1], O_RDONLY));
+	get_next_line(fd, &str);
+	ft_putendl(str);
+	ft_strdel(&str);
+	ft_putendl("freed");
+	return (0);
 }

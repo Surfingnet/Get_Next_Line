@@ -1,7 +1,7 @@
 NAME = Get_Next_Line
 SRC_DIR =./
 INCLUDES_DIR =./
-SRCS=
+SRCS=main get_next_line
 FLAGS=-Wall -Wextra -Werror
 BINS = $(patsubst %,%.o,$(SRCS))
 LIBS =libft
