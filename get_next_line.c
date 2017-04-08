@@ -6,91 +6,103 @@
 /*   By: mghazari <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/03/24 15:09:19 by mghazari          #+#    #+#             */
-/*   Updated: 2017/03/24 17:18:41 by mghazari         ###   ########.fr       */
+/*   Updated: 2017/04/08 18:21:42 by mghazari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static void	concat(char *str1, char *str2)
+static char	*ft_strjoinch(char const *s1, char c)
 {
-	char	*tmp;
+	char	*new_str;
+	size_t	i;
+	size_t	s1_len;
 
-	while (!(tmp = ft_strjoin(str1, str2)))
-		continue;
-	ft_strdel(&str1);
-	str1 = tmp;
+	if (!s1 || !c)
+		return (NULL);
+	s1_len = ft_strlen(s1);
+	new_str = ft_strnew(s1_len + 1);
+	if (!new_str)
+		return (NULL);
+	i = -1;
+	while (++i < s1_len)
+		new_str[i] = s1[i];
+	new_str[i] = c;
+	return (new_str);
+}
+
+/*
+ * Copy chars from src to dst until dst is full or specified char c is found in src. Return index of the first occurence of c found in src, or 0 if dst is too short.
+ */
+static int	ft_copyuntil(char **dst, char *src, char c)
+{
+	int		i;
+	int		count;
+	int		pos;
+
+	i = -1;
+	count = 0;
+	while (src[++i])
+		if (src[i] == c)
+			break ;
+	pos = i;
+	if (!(*dst = ft_strnew(i)))
+		return (0);
+	while (src[count] && count < i)
+	{
+		if (!(*dst = ft_strjoinch(*dst, src[count])))
+			return (0);
+		count++;
+	}
+	return (pos);
 }
 
 /*
  * Return the last saved buffer for a specified fd or make a new one if there is not any saved buffer for this fd and return it. If error, return NULL.
  */
-static char	*buff_list(t_list *file, int fd)
+static t_list	*buff_list(t_list **file, int fd)
 {
 	t_list	*tmp;
 
-	tmp = file;
-	while ((int)tmp->content_size != fd)
-		if(tmp->next)
-			tmp = tmp->next;
-		else
-			break;
-	if ((int)tmp->content_size == fd)
-		return ((char*)tmp->content);
-	if (!(tmp = ft_lstnew(ft_strnew(BUFF_SIZE), BUFF_SIZE + 1)))
-		return (NULL);
-	tmp->content_size = fd;
-	ft_lstadd(&file, tmp);
-	return ((char*)file->content);
+	tmp = *file;
+	while (tmp)
+	{
+		if ((int)tmp->content_size == fd)
+			return (tmp);
+		tmp = tmp->next;
+	}
+	tmp = ft_lstnew("\0", fd);
+	ft_lstadd(file, tmp);
+	tmp = *file;
+	return (tmp);
 }
 
-int			get_next_line(const int fd, char **line)
+int		get_next_line(const int fd, char **line)
 {
-	static t_list	*saved_buffers;
-	char			*last_buffer;
-	int				ret;
-	char			*buf;
-	char			*tmp;
+	char		buf[BUFF_SIZE + 1];
+	static t_list	*file;
+	int		i;
+	int		ret;
+	t_list		*curr;
 
 	if ((fd < 0 || line == NULL || read(fd, buf, 0) < 0))
 		return (-1);
-	if (!saved_buffers)
-		saved_buffers = ft_lstnew(ft_strnew(0), 1);
-	if (!line)
-		return (-1);
-	if (*line)
-		ft_strdel(line);
-	last_buffer = buff_list(saved_buffers, fd);
-	if (!last_buffer && !(*line = ft_strnew(0)))
-		return (-1);
-	ret = 1;
-	if (last_buffer[0] != '\0')//if last buffer is not empty
+	curr = buff_list(&file, fd);
+	while (!(*line = ft_strnew(1)))
+		continue;
+	while ((ret = read(fd, buf, BUFF_SIZE)))
 	{
-		if ((tmp = ft_strchr(last_buffer, (int)'\n')))
-			buf = ft_strcpy(buf, last_buffer);
-		else
-		{
-			concat(*line, last_buffer);
-			while ((ret = read(fd, buf, BUFF_SIZE)) && !(tmp = ft_memchr((void*)buf,(int)'\n', BUFF_SIZE)))
-				concat(*line, buf);
-		}
-		if (ret <= 0 )
-			return (ret);
-		last_buffer = ft_strcpy(last_buffer, &(tmp[1]));
-		ft_strclr(tmp);
-		concat(*line, buf);
-		return (1);
+		buf[ret] = '\0';
+		while (!(curr->content = ft_strjoin(curr->content, buf)))
+			continue;
+		if (ft_strchr(buf, '\n'))
+			break ;
 	}
-	else
-	{
-		while ((ret = read(fd, buf, BUFF_SIZE)) && !(tmp = ft_memchr((void*)buf,(int)'\n', BUFF_SIZE)))
-				concat(*line, buf);
-		if (ret <= 0 )
-			return (ret);
-		last_buffer = ft_strcpy(last_buffer, &(tmp[1]));
-		ft_strclr(tmp);
-		concat(*line, buf);
-		return (1);
-	}
-	return (0);
+	if (ret < BUFF_SIZE && !ft_strlen(curr->content))
+		return (0);
+	i = ft_copyuntil(line, curr->content, '\n');
+	(i < (int)ft_strlen(curr->content))
+		? curr->content += (i + 1)
+		: ft_strclr(curr->content);
+	return (1);
 }

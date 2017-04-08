@@ -6,7 +6,7 @@
 /*   By: mghazari <mghazari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/01/28 12:29:56 by mghazari          #+#    #+#             */
-/*   Updated: 2017/03/23 17:42:45 by mghazari         ###   ########.fr       */
+/*   Updated: 2017/04/08 18:30:26 by mghazari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,29 @@
 
 int	main(int argc, char *argv[])
 {
-	int		fd;
-	char	*str;
+	int	fd1;
+	int	fd2;
+	char	*str1;
+	char	*str2;
 
-	if (argc != 2)
+	if (argc != 3)
 		return (0);
 
-	fd = (open(argv[1], O_RDONLY));
-	get_next_line(fd, &str);
-	ft_putendl("displaying");
-	ft_putendl(str);
-	//ft_strdel(&str);
+	fd1 = (open(argv[1], O_RDONLY));
+	fd2 = (open(argv[2], O_RDONLY));
+	get_next_line(fd1, &str1);//1
+	ft_putendl(str1);
+	get_next_line(fd2, &str2);//2
+	ft_putendl(str2);
+	get_next_line(fd1, &str1);//1
+	ft_putendl(str1);
+	get_next_line(fd2, &str2);//2
+	ft_putendl(str2);
+	get_next_line(fd2, &str2);//2
+	ft_putendl(str2);
+	get_next_line(fd1, &str1);//1
+	ft_putendl(str1);
+	get_next_line(fd1, &str1);//1
+	ft_putendl(str1);
 	return (0);
 }
