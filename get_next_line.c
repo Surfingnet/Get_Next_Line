@@ -1,108 +1,153 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_Next_Line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mghazari <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/03/24 15:09:19 by mghazari          #+#    #+#             */
-/*   Updated: 2017/04/08 18:21:42 by mghazari         ###   ########.fr       */
+/*   Updated: 2017/04/15 13:04:40 by mghazari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static char	*ft_strjoinch(char const *s1, char c)
+static char	*ft_strsubf(char const *s, unsigned int start, size_t len)
 {
-	char	*new_str;
-	size_t	i;
-	size_t	s1_len;
+	char			*str;
+	unsigned int	c;
 
-	if (!s1 || !c)
+	c = 0;
+	if (s == NULL)
 		return (NULL);
-	s1_len = ft_strlen(s1);
-	new_str = ft_strnew(s1_len + 1);
-	if (!new_str)
+	if (!(str = (char *)malloc(sizeof(char) * len + 1)))
+		return (NULL);
+	while (c != len)
+	{
+		str[c] = s[start];
+		c++;
+		start++;
+	}
+	str[c] = '\0';
+	ft_strdel((char **)&s);
+	return (str);
+}
+
+static char	*ft_strjoinf(char const *s1, char const *s2, int f)
+{
+	char	*join;
+	int		i;
+	int		j;
+
+	if (!s1 || !s2 || 
+			!(join = ft_strnew(ft_strlen(s1) + ft_strlen(s2))))
 		return (NULL);
 	i = -1;
-	while (++i < s1_len)
-		new_str[i] = s1[i];
-	new_str[i] = c;
-	return (new_str);
+	j = -1;
+	while (s1[++i])
+		join[i] = s1[i];
+	while (s2[++j])
+		join[i + j] = s2[j];
+	if (f == 1 || f == 3)
+		ft_strdel((char **)(&s1));
+	if (f == 2 || f == 3)
+		ft_strdel((char **)(&s2));
+	return (join);
 }
 
-/*
- * Copy chars from src to dst until dst is full or specified char c is found in src. Return index of the first occurence of c found in src, or 0 if dst is too short.
- */
-static int	ft_copyuntil(char **dst, char *src, char c)
+static t_buff		*crea_lst(t_buff **buff, int fd, int chk)
+{
+	t_buff		*new;
+
+	if (!(new = malloc(sizeof(t_buff))))
+		return (NULL);
+	new->fd = fd;
+	new->ind = -1;
+	new->buff = ft_strnew(BUFF_SIZE);
+	new->next = NULL;
+	if (chk)
+	{
+		new->next = *buff;
+		*buff = new;
+		return (new);
+	}
+	return (new);
+}
+
+static t_buff		*check_buff(t_buff **cpy, int fd)
+{
+	while (*cpy)
+	{
+		if ((*cpy)->fd == fd)
+			return (*cpy);
+		*cpy = (*cpy)->next;
+	}
+	return (NULL);
+}
+
+static int		clean_buff(t_buff *cpy, char **line, int fd)
 {
 	int		i;
-	int		count;
-	int		pos;
 
-	i = -1;
-	count = 0;
-	while (src[++i])
-		if (src[i] == c)
-			break ;
-	pos = i;
-	if (!(*dst = ft_strnew(i)))
-		return (0);
-	while (src[count] && count < i)
+	i = cpy->ind;
+	if (i == -1)
+		i = 0;
+	while (cpy->buff[i])
 	{
-		if (!(*dst = ft_strjoinch(*dst, src[count])))
-			return (0);
-		count++;
+		if (cpy->buff[i] == '\n' || cpy->buff[i] == '\0')
+		{
+			*line = ft_strjoinf(*line,\
+					ft_strsub(cpy->buff, 0, i), 3);
+			cpy->buff = ft_strsubf(cpy->buff, i + 1,\
+					ft_strlen(cpy->buff));
+			cpy->ind = 0;
+			return (1);
+		}
+		i++;
 	}
-	return (pos);
+	*line = ft_strdup(cpy->buff);
+	cpy->buff = ft_strnew(BUFF_SIZE);
+	return (read_file(cpy, line, fd));
 }
 
-/*
- * Return the last saved buffer for a specified fd or make a new one if there is not any saved buffer for this fd and return it. If error, return NULL.
- */
-static t_list	*buff_list(t_list **file, int fd)
+int			read_file(t_buff *cpy, char **line, int fd)
 {
-	t_list	*tmp;
+	int				i;
+	int				ret;
 
-	tmp = *file;
-	while (tmp)
+	i = 0;
+	ret = 0;
+	while ((ret = read(fd, cpy->buff, BUFF_SIZE)) > 0)
 	{
-		if ((int)tmp->content_size == fd)
-			return (tmp);
-		tmp = tmp->next;
+		cpy->buff[ret] = '\0';
+		if (ft_strchr(cpy->buff, '\n') != NULL)
+			return (clean_buff(cpy, line, fd));
+		*line = ft_strjoinf(*line, cpy->buff, 1);
 	}
-	tmp = ft_lstnew("\0", fd);
-	ft_lstadd(file, tmp);
-	tmp = *file;
-	return (tmp);
-}
-
-int		get_next_line(const int fd, char **line)
-{
-	char		buf[BUFF_SIZE + 1];
-	static t_list	*file;
-	int		i;
-	int		ret;
-	t_list		*curr;
-
-	if ((fd < 0 || line == NULL || read(fd, buf, 0) < 0))
+	if (ret == -1)
 		return (-1);
-	curr = buff_list(&file, fd);
-	while (!(*line = ft_strnew(1)))
-		continue;
-	while ((ret = read(fd, buf, BUFF_SIZE)))
-	{
-		buf[ret] = '\0';
-		while (!(curr->content = ft_strjoin(curr->content, buf)))
-			continue;
-		if (ft_strchr(buf, '\n'))
-			break ;
-	}
-	if (ret < BUFF_SIZE && !ft_strlen(curr->content))
+	if (*line[0] == 0)
 		return (0);
-	i = ft_copyuntil(line, curr->content, '\n');
-	(i < (int)ft_strlen(curr->content))
-		? curr->content += (i + 1)
-		: ft_strclr(curr->content);
+	if (ret < BUFF_SIZE)
+		free(cpy->buff);
 	return (1);
+}
+
+int			get_next_line(const int fd, char **line)
+{
+	static t_buff	*buff;
+	t_buff		*cpy;
+
+	if (line == NULL || fd < 0 || BUFF_SIZE <= 0)
+		return (-1);
+	if (!buff)
+		buff = crea_lst(NULL, fd, 0);
+	cpy = buff;
+	if (!check_buff(&cpy, fd))
+		cpy = crea_lst(&buff, fd, 1);
+	*line = ft_strnew(0);
+	if (cpy->ind != -1)
+		if (clean_buff(cpy, line, fd))
+			return (1);
+	return (read_file(cpy, line, fd));
 }
