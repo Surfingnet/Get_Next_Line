@@ -6,7 +6,7 @@
 /*   By: mghazari <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/03/24 15:09:19 by mghazari          #+#    #+#             */
-/*   Updated: 2017/04/18 14:59:43 by mghazari         ###   ########.fr       */
+/*   Updated: 2017/04/18 16:52:39 by mghazari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,10 @@ static int		clean_buff(t_buff *cpy, char **line, int fd)
 	cpy->buff = ft_strnew(BUFF_SIZE);
 	return (read_file(cpy, line, fd));
 }
+
+/*
+ * Lit en boucle BUFF_SIZE caracteres depuis fd dans buf tant que n'est pas lue la fin de chaine ou la fin de ligne, 
+ */
 
 int				read_file(t_buff *cpy, char **line, int fd)
 {
